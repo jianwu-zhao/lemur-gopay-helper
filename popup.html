@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GoPay 长链助手</title>
+  <style>
+    body { font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif; margin: 0; padding: 12px; width: 360px; background: #0f172a; color: #e2e8f0; }
+    h1 { font-size: 16px; margin: 0 0 10px; }
+    .desc { font-size: 12px; color: #94a3b8; margin-bottom: 10px; }
+    .settings { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 10px; margin-bottom: 10px; }
+    label { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #cbd5e1; margin: 8px 0; }
+    input[type="checkbox"] { width: 18px; height: 18px; }
+    select { width: 100%; margin-top: 6px; background: #020617; color: #e2e8f0; border: 1px solid #334155; border-radius: 8px; padding: 8px; }
+    .item { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 10px; margin-bottom: 10px; }
+    .tag { display: inline-block; font-size: 11px; color: #93c5fd; margin-bottom: 6px; }
+    .url { word-break: break-all; font-size: 12px; line-height: 1.45; color: #f8fafc; }
+    .actions { display: flex; gap: 8px; margin-top: 8px; }
+    button { border: 0; border-radius: 8px; padding: 8px 10px; font-size: 12px; cursor: pointer; }
+    .copy { background: #2563eb; color: white; }
+    .open { background: #16a34a; color: white; }
+    .empty { color: #94a3b8; font-size: 12px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>GoPay 长链助手</h1>
+  <div class="desc">解析 GoPay/支付长链，支持手动复制/打开，也可开启自动处理。</div>
+
+  <div class="settings">
+    <label><input id="autoCopy" type="checkbox" /> 发现链接后自动复制</label>
+    <label><input id="autoOpen" type="checkbox" /> 发现链接后自动打开</label>
+    <label><input id="preferDeepLink" type="checkbox" /> 优先 GoPay/Gojek/Intent 深链</label>
+    <div class="desc">自动打开有风险，建议只在可信页面使用。</div>
+    <select id="pickMode">
+      <option value="best">智能选择第一个可用链接</option>
+      <option value="last">选择最后一个解析链接</option>
+      <option value="deep">只优先选择深链</option>
+      <option value="http">只优先选择网页链接</option>
+    </select>
+  </div>
+
+  <div id="app" class="empty">解析中...</div>
+  <script src="shared.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

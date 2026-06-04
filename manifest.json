@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Lemur GoPay LongLink Helper",
+  "version": "1.0.0",
+  "description": "在 Lemur 浏览器中解析 GoPay 长链，提取真实跳转链接并支持一键复制/打开。",
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_title": "GoPay 长链助手",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["shared.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["shared.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

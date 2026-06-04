@@ -9,10 +9,6 @@ from datetime import datetime, timedelta
 from pathlib import Path
 warnings.filterwarnings('ignore')
 
-# 代理
-os.environ['http_proxy'] = 'http://127.0.0.1:2080'
-os.environ['https_proxy'] = 'http://127.0.0.1:2080'
-
 # ========== 配置 ==========
 INITIAL_CAPITAL = 10000.0
 POSITION_PCT = 0.33        # 单只仓位比例
@@ -47,31 +43,28 @@ import time as _time
 def get_hist(etf_code, end_date, retries=3):
     end = datetime.strptime(end_date, '%Y%m%d')
     start = end - timedelta(days=400)
+    prefix = 'sh' if etf_code.startswith(('5','6')) else 'sz'
+    symbol = prefix + etf_code
     for a in range(retries):
         try:
-            _time.sleep(1.0)
-            df = ak.fund_etf_hist_em(symbol=etf_code, period='daily',
-                                      start_date=start.strftime('%Y%m%d'), end_date=end_date, adjust='qfq')
+            df = ak.fund_etf_hist_sina(symbol)
             if df.empty:
-                if a < retries-1: _time.sleep(3); continue
+                if a < retries-1: _time.sleep(2); continue
                 return None, None, None
-            col={}
-            for c in df.columns:
-                s=str(c)
-                if '最高' in s: col[c]='最高价'
-                elif '最低' in s: col[c]='最低价'
-                elif '开盘' in s: col[c]='开盘价'
-                elif '收盘' in s: col[c]='收盘'
-            if col: df=df.rename(columns=col)
-            df['日期']=pd.to_datetime(df['日期'])
-            df=df.set_index('日期').sort_index()
+            df = df.rename(columns={'date':'日期','open':'开盘价','high':'最高价','low':'最低价','close':'收盘'})
+            df['日期'] = pd.to_datetime(df['日期'])
+            df = df[(df['日期'] >= start) & (df['日期'] <= end)].copy()
+            if df.empty:
+                if a < retries-1: _time.sleep(2); continue
+                return None, None, None
+            df = df.set_index('日期').sort_index()
             for x in ['收盘','最高价','最低价','开盘价']:
                 if x in df.columns: df[x]=pd.to_numeric(df[x],errors='coerce')
             wk = df.resample('W-FRI').agg({'收盘':'last','最高价':'max','最低价':'min','开盘价':'first'}).dropna().reset_index()
-            mo = df.resample('M').agg({'收盘':'last','最高价':'max','最低价':'min','开盘价':'first'}).dropna().reset_index()
+            mo = df.resample('ME').agg({'收盘':'last','最高价':'max','最低价':'min','开盘价':'first'}).dropna().reset_index()
             return df.reset_index(), wk, mo
-        except:
-            if a < retries-1: _time.sleep(3*(a+1))
+        except Exception as e:
+            if a < retries-1: _time.sleep(2*(a+1))
             continue
     return None, None, None
 

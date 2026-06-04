@@ -235,7 +235,7 @@ class Portfolio:
 
 # ========== 市场环境 ==========
 def market_assessment(results):
-    if not results: return '未知',0,0
+    if not results: return '数据不足',0,0
     scores=[r['total'] for r in results if r]
     avg=np.mean(scores) if scores else 0
     bull=sum(1 for r in results if r and r['total']>5)
@@ -251,9 +251,12 @@ def market_assessment(results):
 # ========== HTML报告 ==========
 def gen_html(portfolio, results, candidates, status, width, ratio, date_str):
     now=date_str
-    eq=portfolio.total_equity({c.get('code',''):c.get('close',0) for c in results if c})
-    mkt_val=portfolio.market_value({c.get('code',''):c.get('close',0) for c in results if c})
-    pl=eq-initial_capital
+    price_dict={}
+    if results:
+        price_dict={c.get('code',''):c.get('close',0) for c in results if c}
+    eq=portfolio.total_equity(price_dict)
+    mkt_val=portfolio.market_value(price_dict)
+    pl=eq-INITIAL_CAPITAL
 
     def price_of(code, results):
         for r in results:
@@ -261,7 +264,7 @@ def gen_html(portfolio, results, candidates, status, width, ratio, date_str):
         return 0
 
     cand_rows=''
-    for c in candidates[:8]:
+    for c in (candidates or [])[:8]:
         tags=[]
         if c['monthly']>2 and c['weekly']>2: tags.append('📈 三周期共振')
         if c.get('daily_tags') and '顶背离' in c['daily_tags']: tags.append('⚠️ 顶背离')
@@ -353,12 +356,12 @@ td{{padding:8px;border-top:1px solid #1e293b;font-size:12px}}
 </style></head><body>
 <h1>📡 ETF量化波段交易系统</h1>
 <p style="color:#94a3b8;">{now}</p>
-<p>大盘: <span class="env {env_cls}">{env}</span> 宽度{width}% 多空比{ratio}</p>
+<p>大盘: <span class="env {env_cls}">{env}</span> 宽度{width if width else 0}% 多空比{ratio if ratio else 0}</p>
 <div class="kpi-grid">
 <div class="kpi"><label>总资产</label><strong class="number">¥{eq:.0f}</strong></div>
 <div class="kpi"><label>现金</label><strong class="number">¥{portfolio.cash:.0f}</strong></div>
 <div class="kpi"><label>持仓市值</label><strong class="number">¥{mkt_val:.0f}</strong></div>
-<div class="kpi"><label>累计盈亏</label><strong class="number {'is-up' if pl>=0 else 'is-down'}">{pl:+.0f}</strong><small>{pl/initial_capital:.2%}</small></div>
+<div class="kpi"><label>累计盈亏</label><strong class="number {'is-up' if pl>=0 else 'is-down'}">{pl:+.0f}</strong><small>{pl/INITIAL_CAPITAL:.2%}</small></div>
 <div class="kpi"><label>当前回撤</label><strong class="number {'is-down' if portfolio.max_dd>0 else 'is-up'}">-{portfolio.max_dd:.2%}</strong></div>
 <div class="kpi"><label>盈利因子</label><strong class="number">{(sum(t.get('pl',0) for t in portfolio.trades if t.get('pl',0)>0)+1)/(abs(sum(t.get('pl',0) for t in portfolio.trades if t.get('pl',0)<0))+1):.2f}</strong></div>
 <div class="kpi"><label>持仓数</label><strong class="number">{len(portfolio.positions)}/{MAX_POSITIONS}</strong></div>
